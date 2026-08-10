@@ -4,7 +4,7 @@ from pyJoules.energy_meter import measure_energy
 from pyJoules.handler.csv_handler import CSVHandler
 from clear_cache_util import clear_caches
 
-csv_handler = CSVHandler('Vaex_v4.15.0_itr(20).csv')
+csv_handler = CSVHandler('Vaex_v4.15.0_itr(30).csv')
 import time
 import vaex as ve
 
