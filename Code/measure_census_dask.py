@@ -6,8 +6,9 @@ from clear_cache_util import clear_caches
 
 import sys
 
-run_id = sys.argv[1] if len(sys.argv) > 1 else "0"
-csv_handler = CSVHandler(f"dask_census_run{run_id}_v2025.1.0_itr(30).csv")
+# run_id = sys.argv[1] if len(sys.argv) > 1 else "0"
+# csv_handler = CSVHandler(f"dask_census_run{run_id}_v2025.1.0_itr(30).csv")
+csv_handler = CSVHandler(f"dask_census_v2025.1.0_itr(30).csv")
 
 import time
 # import pandas as pd
