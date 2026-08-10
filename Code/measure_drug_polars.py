@@ -6,7 +6,7 @@ from pyJoules.energy_meter import measure_energy
 from pyJoules.handler.csv_handler import CSVHandler
 from clear_cache_util import clear_caches
 
-csv_handler = CSVHandler('polars_drug_v1.31.0_itr(20).csv')
+csv_handler = CSVHandler('polars_drug_v1.31.0_itr(30).csv')
 
 def sleep():
     time.sleep(30)
@@ -107,7 +107,7 @@ def unique(df, cname):
 
 print("Starting Drug Polars Process...")
 
-for i in range(20):
+for i in range(30):
     # I/O Operations
     clear_caches()
     df = load_csv(path='../datasets/drugs.csv')
