@@ -4,7 +4,7 @@ from pyJoules.energy_meter import measure_energy
 from pyJoules.handler.csv_handler import CSVHandler
 from clear_cache_util import clear_caches
 
-csv_handler = CSVHandler(f"polars_water_v1.31.0_itr(20).csv")
+csv_handler = CSVHandler(f"polars_water_v1.31.0_itr(30).csv")
 
 def sleep():
     time.sleep(30)
@@ -105,7 +105,7 @@ def unique(df, cname):
 
 print(f"Starting Water Potability Polars Process...")
 
-for i in range(20):
+for i in range(30):
     df = load_csv(f'../datasets/water_potability.csv')
     sleep()
     df = load_json(f'../datasets/water_potability.json')
