@@ -129,7 +129,7 @@ def unique(df):
 # count, mean, min, max, value_counts, unique, sort values, groupby
 
 print("Starting Adult Dask Process...")
-for i in range(20):
+for i in range(30):
     # Input output functions 
     clear_caches()
     df = load_csv(path='../datasets/adult.csv')
