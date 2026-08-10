@@ -5,7 +5,7 @@ import time
 import vaex as ve
 from clear_cache_util import clear_caches
 
-csv_handler = CSVHandler('Vaex_bank_v4.13.0_itr(20).csv')
+csv_handler = CSVHandler('Vaex_bank_v4.13.0_itr(30).csv')
 
 def sleep():
     time.sleep(30)
@@ -121,7 +121,7 @@ def unique(df):
     return df.unique()
 
 print("Starting Bank Dataset Vaex Process...")
-for i in range(20):
+for i in range(30):
     clear_caches()
     df = load_csv('../datasets/bank.csv')
     sleep()
