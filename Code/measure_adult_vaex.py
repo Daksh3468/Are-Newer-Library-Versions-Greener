@@ -156,7 +156,7 @@ def unique(df):
 # max(df['capital-gain'])
 # unique(df['age'])
 print("Starting Adult Vaex Process...")
-for i in  range(20):
+for i in  range(30):
     # Input Output functions
     clear_caches()
     df = load_csv(path='../datasets/adult.csv')
