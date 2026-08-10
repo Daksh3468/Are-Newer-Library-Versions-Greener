@@ -6,8 +6,10 @@ from clear_cache_util import clear_caches
 
 import sys
 
-run_id = sys.argv[1] if len(sys.argv) > 1 else "0"
-csv_handler = CSVHandler(f"polaris_census_run{run_id}_v0.20.0_itr(20).csv")
+# run_id = sys.argv[1] if len(sys.argv) > 1 else "0"
+# csv_handler = CSVHandler(f"polaris_census_run{run_id}_v0.20.0_itr(30).csv")
+csv_handler = CSVHandler(f"polaris_census_v0.20.0_itr(30).csv")
+
 
 def sleep():
     time.sleep(30)
@@ -108,7 +110,7 @@ def unique(df, cname):
 
 print(f"Starting USCensus1990 Polars Process...")
 
-for i in range(4):
+for i in range(30):
     clear_caches()
     df = load_csv(f'../datasets/USCensus1990.csv')
     sleep()
