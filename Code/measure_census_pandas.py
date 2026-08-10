@@ -162,7 +162,7 @@ def unique(df):
 
 
 print("Starting USCensus1990 Pandas Process...")
-for i in range(5):
+for i in range(30):
     # Input output functions 
     clear_caches()
     print("loading csv")
