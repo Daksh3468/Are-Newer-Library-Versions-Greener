@@ -7,8 +7,9 @@ from clear_cache_util import clear_caches
 
 import sys
 
-run_id = sys.argv[1] if len(sys.argv) > 1 else "0"
-csv_handler = CSVHandler(f"vaex_census_run{run_id}_v4.13.0_itr(30).csv")
+# run_id = sys.argv[1] if len(sys.argv) > 1 else "0"
+# csv_handler = CSVHandler(f"vaex_census_run{run_id}_v4.13.0_itr(30).csv")
+csv_handler = CSVHandler(f"vaex_census_v4.13.0_itr(30).csv")
 
 import time
 import vaex as ve
@@ -162,7 +163,7 @@ def unique(df):
 # max(df['capital-gain'])
 # unique(df['age'])
 print("Starting USCensus1990 Vaex Process...")
-for i in  range(2):
+for i in  range(30):
     # Input Output functions
     clear_caches()
     df = load_csv(path='../datasets/USCensus1990.csv')
