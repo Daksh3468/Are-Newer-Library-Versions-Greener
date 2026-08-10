@@ -11,13 +11,10 @@ Energy is measured at the hardware level using **PyJoules** (Intel RAPL), and re
 
 ```
 .
-├── Code/                              # Benchmark drivers, analysis scripts, notebook
-│   ├── measure_<dataset>_<library>.py     # Energy measurement scripts (one per dataset × library)
-│   ├── measure_water_dask_perf.py         # Auxiliary Dask perf-timing variant for Water Potability
-│   ├── clear_cache_util.py                # Filesystem/CPU-cache clearing utility used before each run
-│   ├── pandas.sh / polar.sh / dask.sh /   # Driver shell scripts: system prep + sequential
-│   │   vaex.sh / census.sh                # execution of measurement scripts
-│   ├── analysis.py                        # Per-tag outlier removal + energy/time summarization
+├── Code/                              # Benchmark scripts, analysis helper, notebook
+│   ├── measure_<dataset>_<library>.py     # Energy measurement scripts (one per dataset × library);
+│   │                                       # system prep + itr(30) loop are self-contained in each script
+│   ├── clear_cache_util.py                # Filesystem/CPU-cache clearing utility, called before every run
 │   ├── compute_p.py                       # Wilcoxon rank-sum p-value computation between variants
 │   └── summary_generator_green_energy.ipynb   # Full statistical pipeline + all paper figures/tables
 │
@@ -38,7 +35,8 @@ Energy is measured at the hardware level using **PyJoules** (Intel RAPL), and re
     ├── Vaex/Vaex_v<version>/...
     ├── summary_results/summary_<Library>/         # Per-tag mean/median/std summaries
     ├── Statistical_Analysis_Results/               # Shapiro, Friedman, Wilcoxon, Cliff's Delta workbooks
-    ├── output_tables/, output_tables_1/            # Consolidated CSV/LaTeX tables used in the paper
+    ├── Output_tables/                              # Consolidated CSV/LaTeX tables used in the paper
+    ├── Variance_results/                           # Per-function variance / IQR-filtered variance summaries
     └── figures/                                    # All generated PNG/PDF figures
 ```
 
@@ -104,7 +102,7 @@ plus the target library (`polars`, `dask[dataframe]`, or `vaex`) at the pinned v
 
 ### 3. System preparation (per run)
 
-Each driver shell script (`pandas.sh`, `polar.sh`, `dask.sh`, `vaex.sh`, `census.sh`) performs the same system-isolation steps used in the paper before launching any measurement:
+There are no separate driver shell scripts in this repository — each `measure_<dataset>_<library>.py` script calls `clear_cache_util.py`'s `clear_caches()` itself, both once at the start of the run and again before every individual benchmark operation. `clear_caches()` performs the same system-isolation steps used in the paper:
 
 ```bash
 sync
@@ -113,7 +111,7 @@ echo performance | sudo tee .../scaling_governor    # fix CPU governor
 echo 1 | sudo tee .../intel_pstate/no_turbo         # disable Turbo Boost
 ```
 
-`clear_cache_util.py`'s `clear_caches()` repeats a version of this before every individual benchmark operation inside each measurement script. For faithful reproduction, also disable networking, background services, and OS notifications, and keep ambient temperature stable, as described in the paper's methodology.
+Because `clear_caches()` shells out to `sudo`, the measurement script itself must be invoked with `sudo` (see below). For faithful reproduction, also disable networking, background services, and OS notifications, and keep ambient temperature stable, as described in the paper's methodology.
 
 ### 4. Running a benchmark
 
@@ -124,28 +122,31 @@ cd Code
 sudo python measure_adult_pandas.py
 ```
 
-This runs all 19 operations (I/O, missing-data, row/column, aggregation) on the Adult dataset for the number of iterations hard-coded in the script (default loop is `for i in range(30)`, i.e. `itr(30)`), sleeping 30 seconds between operations for thermal stabilization, and writes a PyJoules CSV such as `pandas_adult_v1.0.0_itr(30).csv` to the current directory.
+This runs all 19 operations (I/O, missing-data, row/column, aggregation) on the Adult dataset, sleeping 30 seconds between operations for thermal stabilization, and writes a PyJoules CSV such as `pandas_adult_v1.0.0_itr(30).csv` to the current directory. Every measurement script's iteration loop is currently fixed at `for i in range(30)` (i.e. `itr(30)`); to reproduce the `itr(10)`/`itr(20)` campaigns, edit the loop count and the `itr(N)` portion of the `CSVHandler(...)` filename near the top of the script before rerunning.
 
-To run every dataset for a given library sequentially (as done in the study), use the matching driver script:
-
-```bash
-cd Code
-sudo bash pandas.sh   # runs adult, bank, exam, drug, water for Pandas
-sudo bash polar.sh    # runs bank, exam, drug, water for Polars
-sudo bash dask.sh     # runs bank, exam, drug, water for Dask
-sudo bash vaex.sh     # runs bank, exam, drug, water for Vaex
-```
-
-The **US Census 1990** dataset is handled separately (it is far larger and was run as repeated single invocations, one `RUN` per Dask/Pandas/Polars/Vaex census script):
+There is one script per `(dataset, library)` pair and no batch/driver script to chain them — run each dataset's script for a given library individually:
 
 ```bash
 cd Code
-sudo bash census.sh   # repeatedly invokes measure_census_dask.py with an incrementing run id
+sudo python measure_adult_pandas.py
+sudo python measure_bank_pandas.py
+sudo python measure_drug_pandas.py
+sudo python measure_exam_pandas.py
+sudo python measure_water_pandas.py
 ```
 
-For Pandas/Polars/Vaex on Census, invoke the corresponding `measure_census_<library>.py` script directly the same way.
+Repeat with `_dask`, `_polars`, or `_vaex` in place of `_pandas` for the other libraries (in the appropriate versioned environment).
 
-Before switching to the next library version, edit the `CSVHandler(...)` filename string near the top of the script (or install the new version into a fresh venv and rerun) so output files don't overwrite each other, and re-run the corresponding `.sh` script to repeat the same protocol for `itr(10)`, `itr(20)`, and `itr(30)` by adjusting the iteration loop count in the script.
+The **US Census 1990** dataset is handled by its own script per library (`measure_census_pandas.py`, `measure_census_dask.py`, `measure_census_polars.py`, `measure_census_vaex.py`), invoked the same way:
+
+```bash
+cd Code
+sudo python measure_census_dask.py
+```
+
+Each census script currently writes to a single fixed output filename rather than incrementing a run id automatically — to reproduce multiple runs, edit the `CSVHandler(...)` filename (or the commented-out `run_id`-based variant near the top of the script) between invocations so outputs don't overwrite each other.
+
+Before switching to the next library version, edit the `CSVHandler(...)` filename string near the top of the script (or install the new version into a fresh venv and rerun) so output files don't overwrite each other, then repeat the same protocol for `itr(10)`, `itr(20)`, and `itr(30)` by adjusting the iteration loop count in the script.
 
 Each run produces a semicolon-delimited CSV with columns:
 
@@ -163,12 +164,13 @@ The outputs of this pipeline are already included in this repository and do not 
 
 - `Results/summary_results/summary_<Library>/` — per-tag mean/median/std summaries
 - `Results/Statistical_Analysis_Results/` — Shapiro, Friedman, Wilcoxon, and Cliff's Delta result workbooks
-- `Results/output_tables/`, `Results/output_tables_1/` — consolidated CSV/LaTeX tables (`table_I`–`table_IV`)
-- `Results/figures/` — every generated PNG/PDF figure (`fig01`–`fig24`, `figure2`–`figure6`, etc.)
+- `Results/Output_tables/` — consolidated CSV/LaTeX tables (`table_I`–`table_IV`, per-`itr(N)`, plus `combined_results*.csv`)
+- `Results/Variance_results/` — per-function duration/energy variance and IQR-filtered variance/outlier summaries
+- `Results/figures/` — every generated PNG/PDF figure (`fig01`–`fig24`, `figure2`–`figure6`, density and exec-vs-energy plots, etc.)
 
 If you collect new raw measurements (Step 4) and want to extend or rerun the analysis, place the new CSVs into `Results/<Library>/<Library>_v<version>/<Library>_v<version>_itr(<N>)/`, matching the existing folder convention, then rerun the relevant cells of `Code/summary_generator_green_energy.ipynb` against that folder, pointing the `ROOT_DIR`/`OUTPUT_DIR` variables at the top of each cell to your local `Results/` directory.
 
-`Code/analysis.py` (per-file MAD-based outlier removal/summary) and `Code/compute_p.py` (pairwise Wilcoxon rank-sum p-values) are lighter-weight standalone scripts kept in the repo for ad-hoc checks on individual CSVs, but they are not required to reproduce the paper's results — the notebook supersedes both.
+`Code/compute_p.py` (pairwise Wilcoxon rank-sum p-values) is a lighter-weight standalone script kept in the repo for ad-hoc checks on individual CSVs, but it is not required to reproduce the paper's results — the notebook supersedes it.
 
 ### 6. Required Python packages for analysis
 
