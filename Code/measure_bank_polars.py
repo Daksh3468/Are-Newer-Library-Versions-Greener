@@ -106,7 +106,7 @@ def unique(df, cname):
 
 print("Starting Bank Polars Process...")
 
-for i in range(20):
+for i in range(30):
     df = load_csv(f'../datasets/bank.csv')
     sleep()
     df = load_json(f'../datasets/bank.json')
